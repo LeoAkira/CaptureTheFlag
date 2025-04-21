@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "CaptureTheFlagCharacter.generated.h"
 
+class UTP_WeaponComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -23,6 +24,10 @@ class ACaptureTheFlagCharacter : public ACharacter
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
 
+
+	UPROPERTY(EditDefaultsOnly, Category=Weapon)
+	UTP_WeaponComponent* WeaponComponent;
+	
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
@@ -78,7 +83,7 @@ protected:
 
 public:
 	/** Returns Mesh1P subobject **/
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	USkeletalMeshComponent* GetMesh1P() const;
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 

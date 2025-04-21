@@ -76,3 +76,6 @@ DerivedDataCache/*
 # External
 Content/__ExternalActors__/*
 Content/__ExternalObjects__/*
+
+#Rider Files
+.idea/*

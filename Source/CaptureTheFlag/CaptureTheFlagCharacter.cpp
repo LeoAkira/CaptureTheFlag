@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "TP_WeaponComponent.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -17,9 +18,6 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
 	
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
@@ -32,9 +30,9 @@ ACaptureTheFlagCharacter::ACaptureTheFlagCharacter()
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->bCastDynamicShadow = false;
 	Mesh1P->CastShadow = false;
-	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	WeaponComponent = CreateDefaultSubobject<UTP_WeaponComponent>(TEXT("Weapon"));
 }
 
 void ACaptureTheFlagCharacter::BeginPlay()
@@ -43,6 +41,7 @@ void ACaptureTheFlagCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//Add Input Mapping Context
+	
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -50,7 +49,12 @@ void ACaptureTheFlagCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	
+	bool IsLocal = IsLocallyControlled();
+	Mesh1P->SetVisibility(IsLocal);
+	GetMesh()->SetVisibility(!IsLocal);
+	
+	WeaponComponent->AttachWeapon(this);
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -70,6 +74,11 @@ void ACaptureTheFlagCharacter::SetupPlayerInputComponent(class UInputComponent* 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACaptureTheFlagCharacter::Look);
 	}
+}
+
+USkeletalMeshComponent* ACaptureTheFlagCharacter::GetMesh1P() const
+{
+	return IsLocallyControlled() ? Mesh1P : GetMesh();
 }
 
 
