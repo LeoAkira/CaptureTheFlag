@@ -3,12 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AttributeSet.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
 #include "CTFPlayerController.generated.h"
 
 class UCTFAbilitySystemComponent;
 struct FInputActionValue;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, NewHealth);
 /**
  * 
  */
@@ -37,6 +40,11 @@ public:
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config | Input", meta=(AllowPrivateAccess = "true"))
 	UInputAction* ShootAction;
+
+	UPROPERTY()
+	FOnHealthChangedSignature OnHealthChanged;
+
+	void SetupDelegates(UAttributeSet* Attributes);
 
 protected:
 	virtual void BeginPlay() override;

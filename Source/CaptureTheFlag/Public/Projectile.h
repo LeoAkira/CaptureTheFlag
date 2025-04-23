@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
 #include "GameFramework/Actor.h"
-#include "CTFProjectile.generated.h"
+#include "Projectile.generated.h"
 
 class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS(config=Game)
-class ACTFProjectile : public AActor
+class AProjectile : public AActor
 {
 	GENERATED_BODY()
 
@@ -24,7 +24,7 @@ class ACTFProjectile : public AActor
 	UProjectileMovementComponent* ProjectileMovement;
 
 public:
-	ACTFProjectile();
+	AProjectile();
 
 	/** called when projectile hits something */
 	UFUNCTION()

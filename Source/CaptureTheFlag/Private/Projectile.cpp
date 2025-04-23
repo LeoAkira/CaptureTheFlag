@@ -1,13 +1,13 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "CTFProjectile.h"
+#include "Projectile.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "AbilitySystemComponent.h"
 
-ACTFProjectile::ACTFProjectile() 
+AProjectile::AProjectile() 
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -18,7 +18,7 @@ ACTFProjectile::ACTFProjectile()
 	CollisionComp->SetSimulatePhysics(true);
 	CollisionComp->SetNotifyRigidBodyCollision(true);
 	
-	CollisionComp->OnComponentHit.AddDynamic(this, &ACTFProjectile::OnHit);		// set up a notification for when this component hits something blocking
+	CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);		// set up a notification for when this component hits something blocking
 
 	// Set as root component
 	RootComponent = CollisionComp;
@@ -38,7 +38,7 @@ ACTFProjectile::ACTFProjectile()
 	bReplicates = true;
 }
 
-void ACTFProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (HasAuthority() && OtherActor != nullptr && OtherActor != this)
 	{

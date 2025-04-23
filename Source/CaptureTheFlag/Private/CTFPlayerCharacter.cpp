@@ -110,11 +110,12 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 	AttributeSet = CTFPlayerState->GetAttributeSet();
 	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(100);
 	
-	if (ACTFPlayerController* PlayerController = Cast<ACTFPlayerController>(GetController()))
+	if (ACTFPlayerController* CTFPlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
-		if (ACTFHUD* HUD = Cast<ACTFHUD>(PlayerController->GetHUD()))
+		CTFPlayerController->SetupDelegates(AttributeSet);
+		if (ACTFHUD* HUD = Cast<ACTFHUD>(CTFPlayerController->GetHUD()))
 		{
-			//Initialize HUD
+			HUD->InitializeHUD(CTFPlayerController, CTFPlayerState);
 		}
 	}
 }

@@ -5,7 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "CTFProjectile.h"
+#include "Projectile.h"
 #include "WeaponUserInterface.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -24,7 +24,7 @@ void UShootGameplayAbility::SpawnProjectile(AActor* AvatarActor)
 	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
 	// Spawn the projectile at the muzzle
-	ACTFProjectile* Projectile = GetWorld()->SpawnActorDeferred<ACTFProjectile>(
+	AProjectile* Projectile = GetWorld()->SpawnActorDeferred<AProjectile>(
 		ProjectileClass,
 		SpawnTransform,
 		AvatarActor,

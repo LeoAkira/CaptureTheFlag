@@ -5,9 +5,11 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CTFAbilitySystemComponent.h"
+#include "CTFAttributeSet.h"
 #include "CTFPlayerCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
 
 void ACTFPlayerController::BeginPlay()
 {
@@ -17,6 +19,20 @@ void ACTFPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+}
+
+void ACTFPlayerController::SetupDelegates(UAttributeSet* Attributes)
+{
+	UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(Attributes);
+	OnHealthChanged.Broadcast(AttributeSet->GetHealth());
+
+	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda
+	(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			OnHealthChanged.Broadcast(Data.NewValue);
+		}
+	);
 }
 
 void ACTFPlayerController::SetupInputComponent()
