@@ -27,5 +27,5 @@ public:
 	virtual FVector GetMuzzleLocation() = 0;
 	virtual FRotator GetMuzzleRotation() = 0;
 
-	virtual void PlayFireMontage() = 0;
+	virtual void PlayShootMontage() = 0;
 };

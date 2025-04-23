@@ -5,14 +5,14 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "FireGameplayAbility.generated.h"
+#include "ShootGameplayAbility.generated.h"
 
 class ACTFProjectile;
 /**
  * 
  */
 UCLASS()
-class CAPTURETHEFLAG_API UFireGameplayAbility : public UGameplayAbility
+class CAPTURETHEFLAG_API UShootGameplayAbility : public UGameplayAbility
 {
 	GENERATED_BODY()
 

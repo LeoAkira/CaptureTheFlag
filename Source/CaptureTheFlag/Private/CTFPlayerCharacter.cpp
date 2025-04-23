@@ -11,8 +11,6 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACaptureTheFlagCharacter
@@ -41,11 +39,11 @@ void ACTFPlayerCharacter::PossessedBy(AController* NewController)
 {
 	//Server Init
 	Super::PossessedBy(NewController);
-
 	InitAbilityActorInfo();
+
 	if (HasAuthority())
 	{
-		Cast<UCTFAbilitySystemComponent>(AbilitySystemComponent)->AddFireAbility(FireAbility);
+		Cast<UCTFAbilitySystemComponent>(AbilitySystemComponent)->AddShootAbility(ShootAbility);
 	}
 }
 
@@ -66,15 +64,15 @@ FRotator ACTFPlayerCharacter::GetMuzzleRotation()
 	return FirstPersonCameraComponent->GetComponentRotation();
 }
 
-void ACTFPlayerCharacter::PlayFireMontage()
+void ACTFPlayerCharacter::PlayShootMontage()
 {
 	if (IsLocallyControlled())
 	{
-		FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonFireMontage);
+		FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonShootMontage);
 	}
 	else
 	{
-		MulticastFireMontage();
+		MulticastShootMontage();
 	}
 }
 
@@ -83,24 +81,15 @@ UAbilitySystemComponent* ACTFPlayerCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void ACTFPlayerCharacter::MulticastFireMontage_Implementation()
+void ACTFPlayerCharacter::MulticastShootMontage_Implementation()
 {
-	GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonFireMontage);
+	GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonShootMontage);
 }
 
 void ACTFPlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
-	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
 	
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	if (IsLocallyControlled())
@@ -111,60 +100,6 @@ void ACTFPlayerCharacter::BeginPlay()
 	{
 		WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
 	}
-	
-}
-
-//////////////////////////////////////////////////////////////////////////// Input
-
-void ACTFPlayerCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
-{
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACTFPlayerCharacter::Move);
-
-		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACTFPlayerCharacter::Look);
-
-		//Shooting
-		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ACTFPlayerCharacter::Shoot);
-	}
-}
-
-void ACTFPlayerCharacter::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	
-	if (Controller != nullptr)
-	{
-		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
-	}
-}
-
-void ACTFPlayerCharacter::Look(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
-void ACTFPlayerCharacter::Shoot(const FInputActionValue& Value)
-{
-	Cast<UCTFAbilitySystemComponent>(AbilitySystemComponent)->ActivateFireAbility();
 }
 
 void ACTFPlayerCharacter::InitAbilityActorInfo()
@@ -173,6 +108,8 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
 	AttributeSet = CTFPlayerState->GetAttributeSet();
+	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(100);
+	
 	if (ACTFPlayerController* PlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
 		if (ACTFHUD* HUD = Cast<ACTFHUD>(PlayerController->GetHUD()))
@@ -180,10 +117,4 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 			//Initialize HUD
 		}
 	}
-	InitializeAttributes();
-}
-
-void ACTFPlayerCharacter::InitializeAttributes()
-{
-	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(100);
 }

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "FireGameplayAbility.h"
+#include "ShootGameplayAbility.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
@@ -9,7 +9,7 @@
 #include "WeaponUserInterface.h"
 #include "Kismet/GameplayStatics.h"
 
-void UFireGameplayAbility::SpawnProjectile(AActor* AvatarActor)
+void UShootGameplayAbility::SpawnProjectile(AActor* AvatarActor)
 {
 	// Try and fire a projectile
 	if (ProjectileClass == nullptr) return;
@@ -38,7 +38,7 @@ void UFireGameplayAbility::SpawnProjectile(AActor* AvatarActor)
 	Projectile->FinishSpawning(SpawnTransform);
 }
 
-void UFireGameplayAbility::PlaySound(AActor* AvatarActor)
+void UShootGameplayAbility::PlaySound(AActor* AvatarActor)
 {
 	// Try and play the sound if specified
 	if (FireSound == nullptr) return;
@@ -46,12 +46,12 @@ void UFireGameplayAbility::PlaySound(AActor* AvatarActor)
 	UGameplayStatics::PlaySoundAtLocation(this, FireSound, AvatarActor->GetActorLocation());
 }
 
-void UFireGameplayAbility::PlayFireMontage(AActor* AvatarActor)
+void UShootGameplayAbility::PlayFireMontage(AActor* AvatarActor)
 {
-	Cast<IWeaponUserInterface>(AvatarActor)->PlayFireMontage();
+	Cast<IWeaponUserInterface>(AvatarActor)->PlayShootMontage();
 }
 
-void UFireGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+void UShootGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                            const FGameplayAbilityActorInfo* ActorInfo,
                                            const FGameplayAbilityActivationInfo ActivationInfo,
                                            const FGameplayEventData* TriggerEventData)

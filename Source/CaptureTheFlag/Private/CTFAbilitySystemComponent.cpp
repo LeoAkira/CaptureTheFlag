@@ -3,17 +3,19 @@
 
 #include "CTFAbilitySystemComponent.h"
 
-void UCTFAbilitySystemComponent::AddFireAbility(const TSubclassOf<UGameplayAbility> Ability)
+#include "ShootGameplayAbility.h"
+
+void UCTFAbilitySystemComponent::AddShootAbility(const TSubclassOf<UGameplayAbility> Ability)
 {
-	FireAbilitySpec = FGameplayAbilitySpec(Ability, 1);
-	GiveAbility(FireAbilitySpec);
+	GiveAbility(FGameplayAbilitySpec(Ability, 1));
 }
 
-void UCTFAbilitySystemComponent::ActivateFireAbility()
+void UCTFAbilitySystemComponent::ActivateShootAbility()
 {
-	AbilitySpecInputPressed(FireAbilitySpec);
-	if (!FireAbilitySpec.IsActive())
+	FGameplayAbilitySpec ShootAbilitySpec = GetActivatableAbilities()[0];
+	AbilitySpecInputPressed(ShootAbilitySpec);
+	if (!ShootAbilitySpec.IsActive())
 	{
-		TryActivateAbility(FireAbilitySpec.Handle);
+		TryActivateAbility(ShootAbilitySpec.Handle);
 	}
 }

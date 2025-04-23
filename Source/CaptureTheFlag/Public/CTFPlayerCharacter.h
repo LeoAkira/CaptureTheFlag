@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
-#include "InputActionValue.h"
 #include "WeaponUserInterface.h"
 #include "CTFPlayerCharacter.generated.h"
 
@@ -43,10 +42,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponComponent;
 	
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config | Input", meta=(AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
-	
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config | Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -68,7 +63,7 @@ public:
 	virtual void OnRep_PlayerState() override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Config")
-	TSubclassOf<UGameplayAbility> FireAbility;
+	TSubclassOf<UGameplayAbility> ShootAbility;
 
 	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
 	FName WeaponGripSocketName;
@@ -77,10 +72,10 @@ public:
 	FName MuzzleSocketName;
 
 	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
-	UAnimMontage* FirstPersonFireMontage;
+	UAnimMontage* FirstPersonShootMontage;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
-	UAnimMontage* ThirdPersonFireMontage;
+	UAnimMontage* ThirdPersonShootMontage;
 	/*
 	 * IWeaponUserInterface
 	 */
@@ -88,7 +83,7 @@ public:
 	
 	virtual FRotator GetMuzzleRotation() override;
 
-	virtual void PlayFireMontage() override;
+	virtual void PlayShootMontage() override;
 	/*
 	 * end IWeaponUserInterface
 	 */
@@ -101,21 +96,9 @@ public:
 	 * end IAbilitySystemInterface
 	 */
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFireMontage();
+	void MulticastShootMontage();
 protected:
 	virtual void BeginPlay() override;
-
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
-	void Shoot(const FInputActionValue& Value);
-
-	// APawn interface
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
@@ -123,10 +106,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 private:
-
-	TArray<TSubclassOf<UGameplayAbility>> Abilities;
-
 	void InitAbilityActorInfo();
-	void InitializeAttributes();
 };
 

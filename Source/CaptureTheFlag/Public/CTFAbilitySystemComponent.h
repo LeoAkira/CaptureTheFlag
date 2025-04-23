@@ -15,10 +15,7 @@ class CAPTURETHEFLAG_API UCTFAbilitySystemComponent : public UAbilitySystemCompo
 	GENERATED_BODY()
 
 public:
-	void AddFireAbility(const TSubclassOf<UGameplayAbility> Ability);
+	void AddShootAbility(const TSubclassOf<UGameplayAbility> Ability);
 	
-	void ActivateFireAbility();
-
-private:
-	FGameplayAbilitySpec FireAbilitySpec;
+	void ActivateShootAbility();
 };
