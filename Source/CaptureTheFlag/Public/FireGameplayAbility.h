@@ -33,5 +33,5 @@ protected:
 	USoundBase* FireSound;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UGameplayEffect> DamageEffectClass;
+	TSubclassOf<UGameplayEffect> OnHitGameplayEffect;
 };

@@ -3,6 +3,7 @@
 
 #include "FireGameplayAbility.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CTFProjectile.h"
 #include "WeaponUserInterface.h"
@@ -30,7 +31,9 @@ void UFireGameplayAbility::SpawnProjectile(AActor* AvatarActor)
 		Cast<APawn>(AvatarActor),
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-	//TODO: Damage Effect
+	const UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AvatarActor);
+
+	Projectile->OnHitEffect = SourceASC->MakeOutgoingSpec(OnHitGameplayEffect, 1.f, SourceASC->MakeEffectContext());
 		
 	Projectile->FinishSpawning(SpawnTransform);
 }

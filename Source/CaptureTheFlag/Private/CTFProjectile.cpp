@@ -1,14 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CTFProjectile.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "AbilitySystemComponent.h"
 
 ACTFProjectile::ACTFProjectile() 
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
+	CollisionComp->SetCollisionProfileName(TEXT("Projectile"));
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
+	CollisionComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	CollisionComp->SetSimulatePhysics(true);
+	CollisionComp->SetNotifyRigidBodyCollision(true);
+	
 	CollisionComp->OnComponentHit.AddDynamic(this, &ACTFProjectile::OnHit);		// set up a notification for when this component hits something blocking
 
 	// Set as root component
@@ -31,10 +40,12 @@ ACTFProjectile::ACTFProjectile()
 
 void ACTFProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
+	if (HasAuthority() && OtherActor != nullptr && OtherActor != this)
 	{
-		//Damage
+		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
+		{
+			TargetASC->ApplyGameplayEffectSpecToSelf(*OnHitEffect.Data.Get());
+		}
 	}
 	Destroy();
 }

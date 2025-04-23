@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "WeaponUserInterface.h"
 #include "CTFPlayerCharacter.generated.h"
 
-class UCTFAttributeSet;
-class UCTFAbilitySystemComponent;
 class UTP_WeaponComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -24,7 +23,7 @@ class UAbilitySystemComponent;
 class UGameplayAbility;
 
 UCLASS(BlueprintType, config=Game)
-class ACTFPlayerCharacter : public ACharacter, public IWeaponUserInterface
+class ACTFPlayerCharacter : public ACharacter, public IWeaponUserInterface, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -93,6 +92,14 @@ public:
 	/*
 	 * end IWeaponUserInterface
 	 */
+
+	/*
+	 * IAbilitySystemInterface
+	 */
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	/*
+	 * end IAbilitySystemInterface
+	 */
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFireMontage();
 protected:
@@ -111,10 +118,10 @@ protected:
 	// End of APawn interface
 
 	UPROPERTY()
-	TObjectPtr<UCTFAttributeSet> AttributeSet;
+	TObjectPtr<UAttributeSet> AttributeSet;
 	
 	UPROPERTY()
-	TObjectPtr<UCTFAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 private:
 
 	TArray<TSubclassOf<UGameplayAbility>> Abilities;

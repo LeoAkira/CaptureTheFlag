@@ -45,7 +45,7 @@ void ACTFPlayerCharacter::PossessedBy(AController* NewController)
 	InitAbilityActorInfo();
 	if (HasAuthority())
 	{
-		AbilitySystemComponent->AddFireAbility(FireAbility);
+		Cast<UCTFAbilitySystemComponent>(AbilitySystemComponent)->AddFireAbility(FireAbility);
 	}
 }
 
@@ -68,18 +68,24 @@ FRotator ACTFPlayerCharacter::GetMuzzleRotation()
 
 void ACTFPlayerCharacter::PlayFireMontage()
 {
-	MulticastFireMontage();
+	if (IsLocallyControlled())
+	{
+		FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonFireMontage);
+	}
+	else
+	{
+		MulticastFireMontage();
+	}
+}
+
+UAbilitySystemComponent* ACTFPlayerCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void ACTFPlayerCharacter::MulticastFireMontage_Implementation()
 {
-	bool FirstPerson = IsLocallyControlled();
-	const USkeletalMeshComponent* ActiveMesh = FirstPerson ? FirstPersonMesh : GetMesh();
-	UAnimMontage* Montage = FirstPerson ? FirstPersonFireMontage : ThirdPersonFireMontage;
-	if (UAnimInstance* AnimInstance = ActiveMesh->GetAnimInstance(); AnimInstance != nullptr)
-	{
-		AnimInstance->Montage_Play(Montage);
-	}
+	GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonFireMontage);
 }
 
 void ACTFPlayerCharacter::BeginPlay()
@@ -158,15 +164,15 @@ void ACTFPlayerCharacter::Look(const FInputActionValue& Value)
 
 void ACTFPlayerCharacter::Shoot(const FInputActionValue& Value)
 {
-	AbilitySystemComponent->ActivateFireAbility();
+	Cast<UCTFAbilitySystemComponent>(AbilitySystemComponent)->ActivateFireAbility();
 }
 
 void ACTFPlayerCharacter::InitAbilityActorInfo()
 {
 	ACTFPlayerState* CTFPlayerState = GetPlayerState<ACTFPlayerState>();
-	AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(CTFPlayerState->GetAbilitySystemComponent());
+	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
-	AttributeSet = Cast<UCTFAttributeSet>(CTFPlayerState->GetAttributeSet());
+	AttributeSet = CTFPlayerState->GetAttributeSet();
 	if (ACTFPlayerController* PlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
 		if (ACTFHUD* HUD = Cast<ACTFHUD>(PlayerController->GetHUD()))
@@ -179,5 +185,5 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 
 void ACTFPlayerCharacter::InitializeAttributes()
 {
-	AttributeSet->SetHealth(100);
+	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(100);
 }
