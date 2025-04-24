@@ -35,9 +35,6 @@ public:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* FirstPersonMesh;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponComponent;
@@ -72,10 +69,7 @@ public:
 	FName MuzzleSocketName;
 
 	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
-	UAnimMontage* FirstPersonShootMontage;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
-	UAnimMontage* ThirdPersonShootMontage;
+	UAnimMontage* ShootMontage;
 	/*
 	 * IWeaponUserInterface
 	 */
@@ -87,8 +81,6 @@ public:
 	/*
 	 * end IWeaponUserInterface
 	 */
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastShootMontage();
 
 	/*
 	 * IAbilitySystemInterface
@@ -112,7 +104,11 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<FName> BonesToHideInFirstPerson;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float MaxHealth = 100.f;
+
 private:
 	void InitAbilityActorInfo();
 

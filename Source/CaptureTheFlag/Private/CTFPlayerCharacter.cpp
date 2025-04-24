@@ -20,20 +20,12 @@ ACTFPlayerCharacter::ACTFPlayerCharacter()
 {
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(-10.f, 0.f, 60.f)); // Position the camera
+	FirstPersonCameraComponent->SetupAttachment(GetMesh(), WeaponGripSocketName);
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 10.0f, 160.0f));
+	FirstPersonCameraComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
-	FirstPersonMesh->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
-	GetMesh()->SetOwnerNoSee(true);
-	
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
-	WeaponComponent->SetupAttachment(GetCapsuleComponent());
-	WeaponComponent->SetRelativeLocation(FVector::ZeroVector);
 }
 
 void ACTFPlayerCharacter::PossessedBy(AController* NewController)
@@ -69,18 +61,12 @@ FRotator ACTFPlayerCharacter::GetMuzzleRotation()
 
 void ACTFPlayerCharacter::PlayShootMontage()
 {
-	FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonShootMontage);
-	MulticastShootMontage();
+	GetMesh()->GetAnimInstance()->Montage_Play(ShootMontage);
 }
 
 UAbilitySystemComponent* ACTFPlayerCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
-}
-
-void ACTFPlayerCharacter::MulticastShootMontage_Implementation()
-{
-	GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonShootMontage);
 }
 
 float ACTFPlayerCharacter::GetCameraPitch()
@@ -92,15 +78,15 @@ void ACTFPlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	
+
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+	WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
 	if (IsLocallyControlled())
 	{
-		WeaponComponent->AttachToComponent(FirstPersonMesh, AttachmentRules, WeaponGripSocketName);
-	}
-	else
-	{
-		WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
+		for (FName BoneName : BonesToHideInFirstPerson)
+		{
+			GetMesh()->HideBoneByName(BoneName, PBO_MAX);
+		}
 	}
 }
 
