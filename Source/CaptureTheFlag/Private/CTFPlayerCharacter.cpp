@@ -4,6 +4,7 @@
 
 #include "CTFAbilitySystemComponent.h"
 #include "CTFAttributeSet.h"
+#include "CTFGameplayTags.h"
 #include "CTFHUD.h"
 #include "CTFPlayerController.h"
 #include "CTFPlayerState.h"
@@ -26,6 +27,10 @@ ACTFPlayerCharacter::ACTFPlayerCharacter()
 	FirstPersonCameraComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+
+	FlagComponent =  CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flag"));
+	FlagComponent->SetupAttachment(RootComponent);
+	FlagComponent->SetVisibility(false);
 }
 
 void ACTFPlayerCharacter::PossessedBy(AController* NewController)
@@ -99,6 +104,14 @@ void ACTFPlayerCharacter::Tick(float DeltaSeconds)
 	}
 }
 
+void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Count)
+{
+	if (FCTFGameplayTags::Get().Player_HasFlag.MatchesTag(Tag))
+	{
+		FlagComponent->SetVisibility(Count > 0);
+	}
+}
+
 void ACTFPlayerCharacter::InitAbilityActorInfo()
 {
 	ACTFPlayerState* CTFPlayerState = GetPlayerState<ACTFPlayerState>();
@@ -115,6 +128,8 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 			HUD->InitializeHUD(CTFPlayerController, CTFPlayerState);
 		}
 	}
+	FGameplayTag HasTag = FCTFGameplayTags::Get().Player_HasFlag;
+	AbilitySystemComponent->RegisterGameplayTagEvent(HasTag).AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
 }
 
 void ACTFPlayerCharacter::SetCameraPitch_Implementation(float NewValue)
