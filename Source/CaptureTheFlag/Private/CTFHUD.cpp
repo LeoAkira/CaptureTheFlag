@@ -10,7 +10,7 @@ void ACTFHUD::InitializeHUD(ACTFPlayerController* PlayerController, ACTFPlayerSt
 	CTFPlayerState = PlayerState;
 
 	UPlayerDisplay* PlayerDisplay = CreateWidget<UPlayerDisplay>(GetWorld(), PlayerDisplayClass);
-	PlayerDisplay->InitializeDisplay(PlayerController);
+	PlayerDisplay->InitializeDisplay(PlayerController, PlayerState);
 
 	PlayerDisplay->AddToViewport();
 }

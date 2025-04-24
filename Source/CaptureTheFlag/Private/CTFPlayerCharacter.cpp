@@ -119,7 +119,7 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
 	AttributeSet = CTFPlayerState->GetAttributeSet();
-	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(100);
+	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(MaxHealth);
 	
 	if (ACTFPlayerController* CTFPlayerController = Cast<ACTFPlayerController>(GetController()))
 	{

@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CTFPlayerController.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayerDisplay.generated.h"
 
+class ACTFPlayerController;
+class ACTFPlayerState;
 /**
  * 
  */
@@ -16,9 +17,13 @@ class CAPTURETHEFLAG_API UPlayerDisplay : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void InitializeDisplay(ACTFPlayerController* PlayerController);
+	UFUNCTION(BlueprintNativeEvent)
+	void InitializeDisplay(ACTFPlayerController* PlayerController, ACTFPlayerState* PlayerState);
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHealthChanged(float NewHealth);
+
+	UPROPERTY(BlueprintReadOnly)
+	float MaxHealth;
 };

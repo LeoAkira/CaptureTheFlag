@@ -110,6 +110,9 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float MaxHealth = 100.f;
 private:
 	void InitAbilityActorInfo();
 
