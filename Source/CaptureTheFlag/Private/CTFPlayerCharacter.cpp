@@ -11,6 +11,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACaptureTheFlagCharacter
@@ -61,19 +62,15 @@ FVector ACTFPlayerCharacter::GetMuzzleLocation()
 
 FRotator ACTFPlayerCharacter::GetMuzzleRotation()
 {
-	return FirstPersonCameraComponent->GetComponentRotation();
+	FRotator Rotation = FirstPersonCameraComponent->GetComponentRotation();
+	Rotation.Pitch = GetCameraPitch();
+	return Rotation;
 }
 
 void ACTFPlayerCharacter::PlayShootMontage()
 {
-	if (IsLocallyControlled())
-	{
-		FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonShootMontage);
-	}
-	else
-	{
-		MulticastShootMontage();
-	}
+	FirstPersonMesh->GetAnimInstance()->Montage_Play(FirstPersonShootMontage);
+	MulticastShootMontage();
 }
 
 UAbilitySystemComponent* ACTFPlayerCharacter::GetAbilitySystemComponent() const
@@ -84,6 +81,11 @@ UAbilitySystemComponent* ACTFPlayerCharacter::GetAbilitySystemComponent() const
 void ACTFPlayerCharacter::MulticastShootMontage_Implementation()
 {
 	GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonShootMontage);
+}
+
+float ACTFPlayerCharacter::GetCameraPitch()
+{
+	return CameraPitch;
 }
 
 void ACTFPlayerCharacter::BeginPlay()
@@ -99,6 +101,15 @@ void ACTFPlayerCharacter::BeginPlay()
 	else
 	{
 		WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
+	}
+}
+
+void ACTFPlayerCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if (IsLocallyControlled())
+	{
+		SetCameraPitch(Controller->GetControlRotation().Pitch);
 	}
 }
 
@@ -118,4 +129,14 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 			HUD->InitializeHUD(CTFPlayerController, CTFPlayerState);
 		}
 	}
+}
+
+void ACTFPlayerCharacter::SetCameraPitch_Implementation(float NewValue)
+{
+	SetCameraPitchMulticast(NewValue);
+}
+
+void ACTFPlayerCharacter::SetCameraPitchMulticast_Implementation(float NewValue)
+{
+	CameraPitch = NewValue > 180 ? NewValue - 360 : NewValue;
 }

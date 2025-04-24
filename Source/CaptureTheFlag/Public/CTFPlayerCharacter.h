@@ -87,6 +87,8 @@ public:
 	/*
 	 * end IWeaponUserInterface
 	 */
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShootMontage();
 
 	/*
 	 * IAbilitySystemInterface
@@ -95,10 +97,13 @@ public:
 	/*
 	 * end IAbilitySystemInterface
 	 */
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastShootMontage();
+
+	UFUNCTION(BlueprintPure)
+	float GetCameraPitch();
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
@@ -107,5 +112,14 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 private:
 	void InitAbilityActorInfo();
+
+	UPROPERTY()
+	float CameraPitch = 0.f;
+
+	UFUNCTION(Server, Reliable)
+	void SetCameraPitch(float NewValue);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SetCameraPitchMulticast(float NewValue);
 };
 
