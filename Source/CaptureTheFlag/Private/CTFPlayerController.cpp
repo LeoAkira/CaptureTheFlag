@@ -21,9 +21,9 @@ void ACTFPlayerController::BeginPlay()
 	}
 }
 
-void ACTFPlayerController::SetupDelegates(UAttributeSet* Attributes)
+void ACTFPlayerController::SetupDelegates()
 {
-	UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(Attributes);
+	const UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(GetAbilitySystemComponent()->GetAttributeSet(UCTFAttributeSet::StaticClass()));
 	OnHealthChanged.Broadcast(AttributeSet->GetHealth());
 
 	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda
@@ -54,6 +54,12 @@ void ACTFPlayerController::SetupInputComponent()
 		//Shooting
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ACTFPlayerController::Shoot);
 	}
+}
+
+void ACTFPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	SetupDelegates();
 }
 
 void ACTFPlayerController::Jump(const FInputActionValue& Value)
@@ -89,7 +95,7 @@ void ACTFPlayerController::Shoot(const FInputActionValue& Value)
 
 UCTFAbilitySystemComponent* ACTFPlayerController::GetAbilitySystemComponent()
 {
-	if (!AbilitySystemComponent)
+	if (AbilitySystemComponent == nullptr || !IsValid(AbilitySystemComponent))
 	{
 		AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetCharacter()));
 	}

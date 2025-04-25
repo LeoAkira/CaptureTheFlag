@@ -23,6 +23,7 @@ public:
 	FOnFlagAutoDestroyedSignature OnFlagAutoDestroyed;
 	
 protected:
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

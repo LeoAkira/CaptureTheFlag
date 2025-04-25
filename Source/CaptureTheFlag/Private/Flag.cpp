@@ -18,6 +18,20 @@ AFlag::AFlag()
 	Mesh->SetupAttachment(GetRootComponent());
 }
 
+void AFlag::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//Try to reposition the flag on the floor
+	FHitResult Hit;
+	FVector TraceStart = GetActorLocation() + FVector::UpVector * 100;
+	FVector TraceEnd = GetActorLocation() - FVector::UpVector * 100;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic))
+	{
+		SetActorLocation(Hit.Location);
+	}
+}
+
 void AFlag::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -37,6 +51,7 @@ void AFlag::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherAct
 	if (UAbilitySystemComponent* ActorASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 	{
 		ActorASC->AddLooseGameplayTag(FCTFGameplayTags::Get().Player_HasFlag);
+		ActorASC->AddReplicatedLooseGameplayTag(FCTFGameplayTags::Get().Player_HasFlag);
 		Destroy();
 	}
 }

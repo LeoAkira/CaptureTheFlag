@@ -3,11 +3,3 @@
 
 #include "FlagSpawnPoint.h"
 #include "Flag.h"
-
-
-AFlag* AFlagSpawnPoint::SpawnFlag()
-{
-	AFlag* Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, GetActorLocation(), GetActorRotation());
-	Flag->InSpawnPoint = true;
-	return Flag;
-}

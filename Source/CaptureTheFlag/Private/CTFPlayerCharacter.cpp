@@ -28,7 +28,7 @@ ACTFPlayerCharacter::ACTFPlayerCharacter()
 
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
 
-	FlagComponent =  CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flag"));
+	FlagComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flag"));
 	FlagComponent->SetupAttachment(RootComponent);
 	FlagComponent->SetVisibility(false);
 }
@@ -86,13 +86,6 @@ void ACTFPlayerCharacter::BeginPlay()
 
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
-	if (IsLocallyControlled())
-	{
-		for (FName BoneName : BonesToHideInFirstPerson)
-		{
-			GetMesh()->HideBoneByName(BoneName, PBO_MAX);
-		}
-	}
 }
 
 void ACTFPlayerCharacter::Tick(float DeltaSeconds)
@@ -114,6 +107,14 @@ void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Coun
 
 void ACTFPlayerCharacter::InitAbilityActorInfo()
 {
+	if (IsLocallyControlled())
+	{
+		for (FName BoneName : BonesToHideInFirstPerson)
+		{
+			GetMesh()->HideBoneByName(BoneName, PBO_MAX);
+		}
+	}
+	
 	ACTFPlayerState* CTFPlayerState = GetPlayerState<ACTFPlayerState>();
 	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
@@ -122,11 +123,12 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 	
 	if (ACTFPlayerController* CTFPlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
-		CTFPlayerController->SetupDelegates(AttributeSet);
 		if (ACTFHUD* HUD = Cast<ACTFHUD>(CTFPlayerController->GetHUD()))
 		{
 			HUD->InitializeHUD(CTFPlayerController, CTFPlayerState);
 		}
+		AbilitySystemComponent->AddLooseGameplayTag(CTFPlayerController->TeamTag);
+		AbilitySystemComponent->AddReplicatedLooseGameplayTag(CTFPlayerController->TeamTag);
 	}
 	FGameplayTag HasTag = FCTFGameplayTags::Get().Player_HasFlag;
 	AbilitySystemComponent->RegisterGameplayTagEvent(HasTag).AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);

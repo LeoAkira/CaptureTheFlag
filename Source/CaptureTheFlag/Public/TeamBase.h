@@ -6,21 +6,27 @@
 #include "GameplayTagContainer.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
-#include "FlagDeliveryPoint.generated.h"
+#include "TeamBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFlagDeliveredSignature, FGameplayTag, Team);
 
 UCLASS()
-class CAPTURETHEFLAG_API AFlagDeliveryPoint : public AActor
+class CAPTURETHEFLAG_API ATeamBase : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AFlagDeliveryPoint();
+	ATeamBase();
 
 	UPROPERTY(BlueprintAssignable)
 	FOnFlagDeliveredSignature OnFlagDelivered;
+
+	UFUNCTION(BlueprintCallable)
+	FTransform GetRandomSpawnPoint();
+
+	UFUNCTION(BlueprintCallable)
+	FGameplayTag GetTeamTag() { return TeamTag; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -31,6 +37,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	FGameplayTag TeamTag;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FTransform> SpawnPoints;
 
 private:
 	UFUNCTION()

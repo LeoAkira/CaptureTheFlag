@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlagDeliveryPoint.h"
+#include "TeamBase.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
 #include "FlagController.generated.h"
@@ -21,12 +21,16 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnFlagDeliveredSignature OnFlagDelivered;
+
+	UFUNCTION(BlueprintCallable)
+	AFlag* SpawnFlag(FVector Location);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<AFlagDeliveryPoint*> DeliveryPoints;
+	TArray<ATeamBase*> DeliveryPoints;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AFlagSpawnPoint* SpawnPoint;
@@ -39,6 +43,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void StartFlagRespawn();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AFlag> FlagClass;
 	
 private:
 	bool RespawnFlag = false;

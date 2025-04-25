@@ -9,7 +9,13 @@
 AFlagController::AFlagController()
 {
 	PrimaryActorTick.bCanEverTick = true;
+}
 
+AFlag* AFlagController::SpawnFlag(FVector Location)
+{
+	AFlag* Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, Location, FRotator(0, 0, 0));
+	Flag->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
+	return Flag; 
 }
 
 void AFlagController::BeginPlay()
@@ -17,11 +23,11 @@ void AFlagController::BeginPlay()
 	Super::BeginPlay();
 
 	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFlagDeliveryPoint::StaticClass(), FoundActors);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATeamBase::StaticClass(), FoundActors);
 
 	for (AActor* Actor : FoundActors)
 	{
-		AFlagDeliveryPoint* DeliveryPoint = Cast<AFlagDeliveryPoint>(Actor);
+		ATeamBase* DeliveryPoint = Cast<ATeamBase>(Actor);
 		DeliveryPoint->OnFlagDelivered.AddDynamic(this, &AFlagController::FlagDelivered);
 		DeliveryPoints.Add(DeliveryPoint);
 	}
@@ -50,7 +56,7 @@ void AFlagController::Tick(float DeltaTime)
 		CurrentFlagRespawnTime += DeltaTime;
 		if (CurrentFlagRespawnTime >= FlagRespawnTime)
 		{
-			SpawnPoint->SpawnFlag()->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
+ 			SpawnFlag(SpawnPoint->GetActorLocation())->InSpawnPoint = true;
 			RespawnFlag = false;
 		}
 	}

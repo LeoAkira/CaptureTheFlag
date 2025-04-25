@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
 #include "CTFPlayerController.generated.h"
@@ -44,11 +45,15 @@ public:
 	UPROPERTY()
 	FOnHealthChangedSignature OnHealthChanged;
 
-	void SetupDelegates(UAttributeSet* Attributes);
+	void SetupDelegates();
+
+	UPROPERTY()
+	FGameplayTag TeamTag;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	UFUNCTION()
 	void Jump(const FInputActionValue& Value);
