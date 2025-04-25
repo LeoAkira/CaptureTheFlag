@@ -10,9 +10,7 @@
 #include "CTFPlayerState.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Net/UnrealNetwork.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACaptureTheFlagCharacter
@@ -37,7 +35,7 @@ void ACTFPlayerCharacter::PossessedBy(AController* NewController)
 {
 	//Server Init
 	Super::PossessedBy(NewController);
-	InitAbilityActorInfo();
+	InitializeCharacter();
 
 	if (HasAuthority())
 	{
@@ -49,7 +47,7 @@ void ACTFPlayerCharacter::OnRep_PlayerState()
 {
 	//Client Init
 	Super::OnRep_PlayerState();
-	InitAbilityActorInfo();
+	InitializeCharacter();
 }
 
 FVector ACTFPlayerCharacter::GetMuzzleLocation()
@@ -99,13 +97,24 @@ void ACTFPlayerCharacter::Tick(float DeltaSeconds)
 
 void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Count)
 {
-	if (FCTFGameplayTags::Get().Player_HasFlag.MatchesTag(Tag))
+	if (Tag.MatchesTagExact(FCTFGameplayTags::Get().Player_HasFlag))
 	{
 		FlagComponent->SetVisibility(Count > 0);
 	}
+	else if (Tag.MatchesTag(FCTFGameplayTags::Get().Team) && Count > 0)
+	{
+		TArray<UMaterialInstance*> Materials;
+		if (TeamMaterials->FindCharacterTeamMaterials(Tag, Materials))
+		{
+			for (int i = 0; i < Materials.Num(); i++)
+			{
+				GetMesh()->SetMaterial(i, Materials[i]);
+			}
+		}
+	}
 }
 
-void ACTFPlayerCharacter::InitAbilityActorInfo()
+void ACTFPlayerCharacter::InitializeCharacter()
 {
 	if (IsLocallyControlled())
 	{
@@ -121,6 +130,8 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 	AttributeSet = CTFPlayerState->GetAttributeSet();
 	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(MaxHealth);
 	
+	AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
+	
 	if (ACTFPlayerController* CTFPlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
 		if (ACTFHUD* HUD = Cast<ACTFHUD>(CTFPlayerController->GetHUD()))
@@ -130,8 +141,6 @@ void ACTFPlayerCharacter::InitAbilityActorInfo()
 		AbilitySystemComponent->AddLooseGameplayTag(CTFPlayerController->TeamTag);
 		AbilitySystemComponent->AddReplicatedLooseGameplayTag(CTFPlayerController->TeamTag);
 	}
-	FGameplayTag HasTag = FCTFGameplayTags::Get().Player_HasFlag;
-	AbilitySystemComponent->RegisterGameplayTagEvent(HasTag).AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
 }
 
 void ACTFPlayerCharacter::SetCameraPitch_Implementation(float NewValue)

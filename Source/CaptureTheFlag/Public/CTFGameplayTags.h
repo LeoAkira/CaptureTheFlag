@@ -12,7 +12,8 @@ public:
 	static void InitializeGameplayTags();
 
 	FGameplayTag Player_HasFlag;
-	
+
+	FGameplayTag Team;
 	FGameplayTag Team_Red;
 	FGameplayTag Team_Blue;
 private:

@@ -11,6 +11,11 @@ void FCTFGameplayTags::InitializeGameplayTags()
 	(
 		FName("Player.HasFlag")
 	);
+
+	GameplayTags.Team = UGameplayTagsManager::Get().AddNativeGameplayTag
+	(
+		FName("Team")
+	);
 	
 	GameplayTags.Team_Red = UGameplayTagsManager::Get().AddNativeGameplayTag
 	(

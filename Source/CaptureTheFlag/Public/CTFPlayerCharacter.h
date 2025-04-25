@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "CharacterTeamMaterialsInfo.h"
 #include "GameFramework/Character.h"
 #include "WeaponUserInterface.h"
 #include "CTFPlayerCharacter.generated.h"
@@ -115,8 +116,11 @@ protected:
 	UFUNCTION()
 	void OnGameplayTagCountChanged(FGameplayTag Tag, int32 Count);
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UCharacterTeamMaterials* TeamMaterials;
+
 private:
-	void InitAbilityActorInfo();
+	void InitializeCharacter();
 
 	UPROPERTY()
 	float CameraPitch = 0.f;

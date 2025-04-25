@@ -31,6 +31,11 @@ void ACTFPlayerController::SetupDelegates()
 		[this](const FOnAttributeChangeData& Data)
 		{
 			OnHealthChanged.Broadcast(Data.NewValue);
+
+			if (Data.NewValue <= 0)
+			{
+				
+			}
 		}
 	);
 }
