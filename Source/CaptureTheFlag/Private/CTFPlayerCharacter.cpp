@@ -8,9 +8,12 @@
 #include "CTFHUD.h"
 #include "CTFPlayerController.h"
 #include "CTFPlayerState.h"
+#include "FlagController.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACaptureTheFlagCharacter
@@ -31,11 +34,21 @@ ACTFPlayerCharacter::ACTFPlayerCharacter()
 	FlagComponent->SetVisibility(false);
 }
 
+void ACTFPlayerCharacter::BeginPlay()
+{
+	// Call the base class  
+	Super::BeginPlay();
+
+	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+	WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
+}
+
 void ACTFPlayerCharacter::PossessedBy(AController* NewController)
 {
 	//Server Init
 	Super::PossessedBy(NewController);
 	InitializeCharacter();
+	InitializeController();
 
 	if (HasAuthority())
 	{
@@ -47,7 +60,13 @@ void ACTFPlayerCharacter::OnRep_PlayerState()
 {
 	//Client Init
 	Super::OnRep_PlayerState();
-	InitializeCharacter();
+
+	//OnRep_PlayerState seems to be called also when player state is destroyed
+	if (GetPlayerState())
+	{
+		InitializeCharacter();
+	}
+	InitializeController();
 }
 
 FVector ACTFPlayerCharacter::GetMuzzleLocation()
@@ -77,15 +96,6 @@ float ACTFPlayerCharacter::GetCameraPitch()
 	return CameraPitch;
 }
 
-void ACTFPlayerCharacter::BeginPlay()
-{
-	// Call the base class  
-	Super::BeginPlay();
-
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
-}
-
 void ACTFPlayerCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -101,17 +111,21 @@ void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Coun
 	{
 		FlagComponent->SetVisibility(Count > 0);
 	}
-	else if (Tag.MatchesTag(FCTFGameplayTags::Get().Team) && Count > 0)
-	{
-		TArray<UMaterialInstance*> Materials;
-		if (TeamMaterials->FindCharacterTeamMaterials(Tag, Materials))
-		{
-			for (int i = 0; i < Materials.Num(); i++)
-			{
-				GetMesh()->SetMaterial(i, Materials[i]);
-			}
-		}
-	}
+}
+
+void ACTFPlayerCharacter::CharacterDeath()
+{
+	//Ragdoll
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	
+	WeaponComponent->SetSimulatePhysics(true);
+	WeaponComponent->SetEnableGravity(true);
+	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ACTFPlayerCharacter::InitializeCharacter()
@@ -131,15 +145,52 @@ void ACTFPlayerCharacter::InitializeCharacter()
 	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(MaxHealth);
 	
 	AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
-	
+}
+
+void ACTFPlayerCharacter::InitializeController()
+{
 	if (ACTFPlayerController* CTFPlayerController = Cast<ACTFPlayerController>(GetController()))
 	{
 		if (ACTFHUD* HUD = Cast<ACTFHUD>(CTFPlayerController->GetHUD()))
 		{
-			HUD->InitializeHUD(CTFPlayerController, CTFPlayerState);
+			HUD->InitializeHUD(CTFPlayerController);
 		}
 		AbilitySystemComponent->AddLooseGameplayTag(CTFPlayerController->TeamTag);
 		AbilitySystemComponent->AddReplicatedLooseGameplayTag(CTFPlayerController->TeamTag);
+		SetTeamMaterials(CTFPlayerController->TeamTag);
+
+		CTFPlayerController->OnHealthChanged.AddDynamic(this, &ACTFPlayerCharacter::OnHealthChanged);
+	}
+}
+
+void ACTFPlayerCharacter::SetTeamMaterials_Implementation(FGameplayTag TeamTag)
+{
+	TArray<UMaterialInstance*> Materials;
+	if (TeamMaterials->FindCharacterTeamMaterials(TeamTag, Materials))
+	{
+		for (int i = 0; i < Materials.Num(); i++)
+		{
+			GetMesh()->SetMaterial(i, Materials[i]);
+		}
+	}
+}
+
+void ACTFPlayerCharacter::OnHealthChanged_Implementation(float NewValue)
+{
+	if (NewValue <= 0)
+	{
+		if (IsLocallyControlled())
+		{
+			DisableInput(Cast<APlayerController>(GetController()));
+		}
+		
+		CharacterDeath();
+
+		//Drop flag
+		if (AbilitySystemComponent->HasMatchingGameplayTag(FCTFGameplayTags::Get().Player_HasFlag))
+		{
+			//Cast<AFlagController>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlagController::StaticClass()))->StartFlagRespawn();
+		}
 	}
 }
 

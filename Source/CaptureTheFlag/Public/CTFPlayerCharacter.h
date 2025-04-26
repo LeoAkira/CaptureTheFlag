@@ -30,10 +30,6 @@ class ACTFPlayerCharacter : public ACharacter, public IWeaponUserInterface, publ
 public:
 	ACTFPlayerCharacter();
 
-	/** Returns FirstPersonCameraComponent subobject **/
-	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 	
@@ -59,10 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config | Input", meta=(AllowPrivateAccess = "true"))
 	UInputAction* ShootAction;
 
-	virtual void PossessedBy(AController* NewController) override;
-	
-	virtual void OnRep_PlayerState() override;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Config")
 	TSubclassOf<UGameplayAbility> ShootAbility;
 
@@ -74,31 +66,23 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Config | Weapon")
 	UAnimMontage* ShootMontage;
-	/*
-	 * IWeaponUserInterface
-	 */
+
+	//IWeaponUserInterface
 	virtual FVector GetMuzzleLocation() override;
-	
 	virtual FRotator GetMuzzleRotation() override;
-
 	virtual void PlayShootMontage() override;
-	/*
-	 * end IWeaponUserInterface
-	 */
+	//end IWeaponUserInterface
 
-	/*
-	 * IAbilitySystemInterface
-	 */
+	//IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	/*
-	 * end IAbilitySystemInterface
-	 */
+	//end IAbilitySystemInterface
 
 	UFUNCTION(BlueprintPure)
 	float GetCameraPitch();
 protected:
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
 	virtual void BeginPlay() override;
-
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY()
@@ -107,20 +91,24 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Config")
 	TArray<FName> BonesToHideInFirstPerson;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Config")
 	float MaxHealth = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Config")
+	UCharacterTeamMaterials* TeamMaterials;
 
 	UFUNCTION()
 	void OnGameplayTagCountChanged(FGameplayTag Tag, int32 Count);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UCharacterTeamMaterials* TeamMaterials;
-
+	UFUNCTION()
+	void CharacterDeath();
+	
 private:
 	void InitializeCharacter();
+	void InitializeController();
 
 	UPROPERTY()
 	float CameraPitch = 0.f;
@@ -130,5 +118,11 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void SetCameraPitchMulticast(float NewValue);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void OnHealthChanged(float NewValue);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SetTeamMaterials(FGameplayTag TeamTag);
 };
 

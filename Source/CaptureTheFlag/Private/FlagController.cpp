@@ -13,9 +13,11 @@ AFlagController::AFlagController()
 
 AFlag* AFlagController::SpawnFlag(FVector Location)
 {
-	AFlag* Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, Location, FRotator(0, 0, 0));
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	AFlag* Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, Location, FRotator(0, 0, 0), SpawnParameters);
 	Flag->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
-	return Flag; 
+	return Flag;
 }
 
 void AFlagController::BeginPlay()

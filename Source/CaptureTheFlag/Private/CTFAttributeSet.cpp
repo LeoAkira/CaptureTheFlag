@@ -17,14 +17,6 @@ void UCTFAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCTFAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
-	{
-		if (GetHealth() <= 0)
-		{
-			//Death
-		}
-	}
 }
 
 void UCTFAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) const

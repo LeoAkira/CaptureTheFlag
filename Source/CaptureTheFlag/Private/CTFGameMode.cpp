@@ -1,34 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CTFGameMode.h"
-
-/*
-#include "CTFGameState.h"
-#include "CTFHUD.h"
-#include "CTFPlayerCharacter.h"
-#include "CTFPlayerController.h"
-#include "CTFPlayerState.h"
-*/
 #include "CTFPlayerController.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
-ACTFGameMode::ACTFGameMode(): Super()
+void ACTFGameMode::SpawnPlayer(ACTFPlayerController* Controller)
 {
-	/*
-	DefaultPawnClass = ACTFPlayerCharacter::StaticClass();
-	HUDClass = ACTFHUD::StaticClass();
-	PlayerControllerClass = ACTFPlayerController::StaticClass();
-	GameStateClass = ACTFGameState::StaticClass();
-	PlayerStateClass = ACTFPlayerState::StaticClass();
-	*/
-}
-
-void ACTFGameMode::RespawnPlayer(APlayerController* Controller, FGameplayTag TeamTag)
-{
-	ATeamBase* Base = *TeamBases.Find(TeamTag);
-	ACharacter* Character = GetWorld()->SpawnActor<ACharacter>(PlayerCharacterClass, Base->GetRandomSpawnPoint());
+	ATeamBase* TeamBase = *TeamBases.Find(Controller->TeamTag);
+	ACharacter* Character = GetWorld()->SpawnActor<ACharacter>(PlayerCharacterClass, TeamBase->GetRandomSpawnPoint());
 
 	//Adding a delay before Possess so character can be properly initialized first
 	FTimerDelegate TimerDelegate;
@@ -37,6 +18,16 @@ void ACTFGameMode::RespawnPlayer(APlayerController* Controller, FGameplayTag Tea
 	});
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
+}
+
+void ACTFGameMode::RespawnPlayer(ACTFPlayerController* Controller)
+{
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([this, Controller]{
+		SpawnPlayer(Controller);
+	});
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, RespawnTime, false);
 }
 
 void ACTFGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -61,18 +52,12 @@ void ACTFGameMode::OnPostLogin(AController* NewPlayer)
 {
 	Super::OnPostLogin(NewPlayer);
 
-	if (ACTFPlayerController* PC = Cast<ACTFPlayerController>(NewPlayer))
+	if (ACTFPlayerController* PlayerController = Cast<ACTFPlayerController>(NewPlayer))
 	{
 		FGameplayTag TeamTag = GetTeamWithLessPlayers();
-		PC->TeamTag = TeamTag;
+		PlayerController->TeamTag = TeamTag;
 		TeamsPlayerCount[TeamTag]++;
-		RespawnPlayer(PC, TeamTag);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("New Player, Teams:"));
-	for (FGameplayTag Tag : TeamTags)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: %d"), *Tag.ToString(), TeamsPlayerCount[Tag]);
+		SpawnPlayer(PlayerController);
 	}
 }
 
@@ -83,13 +68,6 @@ void ACTFGameMode::Logout(AController* Exiting)
 		FGameplayTag TeamTag = PC->TeamTag;
 		TeamsPlayerCount[TeamTag]--;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Player Exited, Teams:"));
-	for (FGameplayTag Tag : TeamTags)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: %d"), *Tag.ToString(), TeamsPlayerCount[Tag]);
-	}
-	
 	Super::Logout(Exiting);
 }
 

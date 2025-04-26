@@ -24,6 +24,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AFlag* SpawnFlag(FVector Location);
+
+	UFUNCTION(BlueprintCallable)
+	void StartFlagRespawn();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -41,10 +44,7 @@ protected:
 	UPROPERTY()
 	float FlagRespawnTime = 5.f;
 
-	UFUNCTION(BlueprintCallable)
-	void StartFlagRespawn();
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AFlag> FlagClass;
 	
 private:

@@ -14,10 +14,11 @@ class ACTFGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-	ACTFGameMode();
+	UFUNCTION(BlueprintCallable)
+	void SpawnPlayer(ACTFPlayerController* Controller);
 
 	UFUNCTION(BlueprintCallable)
-	void RespawnPlayer(APlayerController* Controller, FGameplayTag TeamTag);
+	void RespawnPlayer(ACTFPlayerController* Controller);
 	
 protected:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
@@ -35,6 +36,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FGameplayTag> TeamTags;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RespawnTime = 3.f;
 
 private:
 	FGameplayTag GetTeamWithLessPlayers();

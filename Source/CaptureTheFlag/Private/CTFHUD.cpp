@@ -2,15 +2,14 @@
 
 
 #include "CTFHUD.h"
+
+#include "CTFAttributeSet.h"
 #include "PlayerDisplay.h"
 
-void ACTFHUD::InitializeHUD(ACTFPlayerController* PlayerController, ACTFPlayerState* PlayerState)
+void ACTFHUD::InitializeHUD(ACTFPlayerController* PlayerController)
 {
-	CTFPlayerController = PlayerController;
-	CTFPlayerState = PlayerState;
-
 	UPlayerDisplay* PlayerDisplay = CreateWidget<UPlayerDisplay>(GetWorld(), PlayerDisplayClass);
-	PlayerDisplay->InitializeDisplay(PlayerController, PlayerState);
+	PlayerDisplay->InitializeDisplay(PlayerController);
 
 	PlayerDisplay->AddToViewport();
 }

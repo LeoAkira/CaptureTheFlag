@@ -6,6 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "CTFPlayerController.h"
 #include "CTFPlayerState.h"
+#include "CTFAttributeSet.h"
+#include "CTFAbilitySystemComponent.h"
 #include "CTFHUD.generated.h"
 
 class UPlayerDisplay;
@@ -18,7 +20,7 @@ class CAPTURETHEFLAG_API ACTFHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-	void InitializeHUD(ACTFPlayerController* PlayerController, ACTFPlayerState* PlayerState);
+	void InitializeHUD(ACTFPlayerController* PlayerController);
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -30,4 +32,7 @@ private:
 
 	UPROPERTY()
 	ACTFPlayerState* CTFPlayerState;
+
+	UPROPERTY()
+	UCTFAttributeSet* CTFAttributeSet;
 };

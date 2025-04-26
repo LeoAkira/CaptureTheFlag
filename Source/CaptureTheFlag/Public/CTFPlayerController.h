@@ -75,4 +75,7 @@ private:
 	TObjectPtr<UCTFAbilitySystemComponent> AbilitySystemComponent;
 
 	UCTFAbilitySystemComponent* GetAbilitySystemComponent();
+
+	UFUNCTION(Server, Reliable)
+	void RequestRespawn();
 };

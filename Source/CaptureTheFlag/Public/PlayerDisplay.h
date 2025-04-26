@@ -8,6 +8,7 @@
 
 class ACTFPlayerController;
 class ACTFPlayerState;
+class UCTFAttributeSet;
 /**
  * 
  */
@@ -18,7 +19,7 @@ class CAPTURETHEFLAG_API UPlayerDisplay : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintNativeEvent)
-	void InitializeDisplay(ACTFPlayerController* PlayerController, ACTFPlayerState* PlayerState);
+	void InitializeDisplay(ACTFPlayerController* PlayerController);
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)

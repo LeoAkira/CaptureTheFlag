@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CTFAbilitySystemComponent.h"
 #include "CTFAttributeSet.h"
+#include "CTFGameMode.h"
 #include "CTFPlayerCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -34,7 +35,7 @@ void ACTFPlayerController::SetupDelegates()
 
 			if (Data.NewValue <= 0)
 			{
-				
+				RequestRespawn();
 			}
 		}
 	);
@@ -105,4 +106,10 @@ UCTFAbilitySystemComponent* ACTFPlayerController::GetAbilitySystemComponent()
 		AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetCharacter()));
 	}
 	return AbilitySystemComponent;
+}
+
+void ACTFPlayerController::RequestRespawn_Implementation()
+{
+	ACTFGameMode* GameMode = Cast<ACTFGameMode>(GetWorld()->GetAuthGameMode());
+	GameMode->RespawnPlayer(this);
 }

@@ -2,13 +2,23 @@
 
 
 #include "PlayerDisplay.h"
+
+#include "CTFAbilitySystemComponent.h"
 #include "CTFPlayerController.h"
 #include "CTFAttributeSet.h"
 #include "CTFPlayerState.h"
 
-void UPlayerDisplay::InitializeDisplay_Implementation(ACTFPlayerController* PlayerController, ACTFPlayerState* PlayerState)
+void UPlayerDisplay::InitializeDisplay_Implementation(ACTFPlayerController* PlayerController)
 {
-	PlayerController->OnHealthChanged.AddDynamic(this, &UPlayerDisplay::OnHealthChanged);
-
-	MaxHealth = Cast<UCTFAttributeSet>(PlayerState->GetAttributeSet())->GetHealth();
+	ACTFPlayerState* PlayerState = PlayerController->GetPlayerState<ACTFPlayerState>();
+	UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(PlayerState->GetAttributeSet());
+	UCTFAbilitySystemComponent* AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(PlayerState->GetAbilitySystemComponent());
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			OnHealthChanged(Data.NewValue);
+		}
+	);
+	
+	MaxHealth = AttributeSet->GetHealth();
 }
