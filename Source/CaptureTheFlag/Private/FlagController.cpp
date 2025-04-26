@@ -6,20 +6,6 @@
 #include "FlagSpawnPoint.h"
 #include "Kismet/GameplayStatics.h"
 
-AFlagController::AFlagController()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
-
-AFlag* AFlagController::SpawnFlag(FVector Location)
-{
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	AFlag* Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, Location, FRotator(0, 0, 0), SpawnParameters);
-	Flag->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
-	return Flag;
-}
-
 void AFlagController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -42,25 +28,35 @@ void AFlagController::FlagDelivered(FGameplayTag TeamTag)
 	OnFlagDelivered.Broadcast(TeamTag);
 }
 
+AFlag* AFlagController::GetFlag()
+{
+	if (!Flag)
+	{
+		Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, FTransform());
+		Flag->HideFlag();
+		Flag->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
+	}
+	return Flag;
+}
+
 void AFlagController::StartFlagRespawn()
 {
-	CurrentFlagRespawnTime = 0.f;
-	RespawnFlag = true;
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([this]{
+		GetFlag()->ShowFlag(SpawnPoint->GetActorLocation(), true);
+	});
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, FlagRespawnTime, false);
 }
 
-// Called every frame
-void AFlagController::Tick(float DeltaTime)
+void AFlagController::SpawnFlagAt(FVector Location)
 {
-	Super::Tick(DeltaTime);
-
-	if (RespawnFlag)
-	{
-		CurrentFlagRespawnTime += DeltaTime;
-		if (CurrentFlagRespawnTime >= FlagRespawnTime)
-		{
- 			SpawnFlag(SpawnPoint->GetActorLocation())->InSpawnPoint = true;
-			RespawnFlag = false;
-		}
-	}
+	GetFlag()->ShowFlag(Location, false);
 }
+
+void AFlagController::RemoveFlag()
+{
+	GetFlag()->HideFlag();
+}
+
 

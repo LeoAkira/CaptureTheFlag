@@ -13,6 +13,7 @@ class UCTFAbilitySystemComponent;
 struct FInputActionValue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, NewHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDiedSignature, ACTFPlayerController*, PlayerController);
 /**
  * 
  */
@@ -45,10 +46,16 @@ public:
 	UPROPERTY()
 	FOnHealthChangedSignature OnHealthChanged;
 
+	UPROPERTY()
+	FOnPlayerDiedSignature OnPlayerDied;
+
 	void SetupDelegates();
 
 	UPROPERTY()
 	FGameplayTag TeamTag;
+
+	UFUNCTION()
+	UCTFAbilitySystemComponent* GetAbilitySystemComponent();
 
 protected:
 	virtual void BeginPlay() override;
@@ -73,9 +80,4 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UCTFAbilitySystemComponent> AbilitySystemComponent;
-
-	UCTFAbilitySystemComponent* GetAbilitySystemComponent();
-
-	UFUNCTION(Server, Reliable)
-	void RequestRespawn();
 };

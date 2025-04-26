@@ -10,26 +10,23 @@
 
 AFlag::AFlag()
 {
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>("Root"));
 	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
-	SetRootComponent(Capsule);
+	Capsule->SetupAttachment(GetRootComponent());
 	Capsule->OnComponentBeginOverlap.AddDynamic(this, &AFlag::OnOverlap);
 	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(GetRootComponent());
+	Mesh->SetupAttachment(Capsule);
+
+	bReplicates = true;
+	ReplicatedComponents.Add(Capsule);
+	ReplicatedComponents.Add(Mesh);
 }
 
 void AFlag::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//Try to reposition the flag on the floor
-	FHitResult Hit;
-	FVector TraceStart = GetActorLocation() + FVector::UpVector * 100;
-	FVector TraceEnd = GetActorLocation() - FVector::UpVector * 100;
-	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic))
-	{
-		SetActorLocation(Hit.Location);
-	}
+	SetReplicateMovement(true);
 }
 
 void AFlag::Tick(float DeltaTime)
@@ -37,11 +34,11 @@ void AFlag::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!InSpawnPoint)
 	{
-		TimeToAutoDestroy -= DeltaTime;
-		if (TimeToAutoDestroy <= 0.f)
+		CurrTimeToDestroy += DeltaTime;
+		if (CurrTimeToDestroy >= TimeToAutoDestroy)
 		{
+			HideFlag();
 			OnFlagAutoDestroyed.Broadcast();
-			Destroy();
 		}
 	}
 }
@@ -52,6 +49,32 @@ void AFlag::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherAct
 	{
 		ActorASC->AddLooseGameplayTag(FCTFGameplayTags::Get().Player_HasFlag);
 		ActorASC->AddReplicatedLooseGameplayTag(FCTFGameplayTags::Get().Player_HasFlag);
-		Destroy();
+		HideFlag();
 	}
+}
+
+void AFlag::ShowFlag(FVector Location, bool bInSpawnPoint)
+{
+	//Try to reposition the flag on the floor
+	FHitResult Hit;
+	FVector TraceStart = Location + FVector::UpVector * 100;
+	FVector TraceEnd = Location - FVector::UpVector * 100;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic))
+	{
+		SetActorLocation(Hit.Location);
+	}
+	
+	Capsule->SetGenerateOverlapEvents(true);
+	Mesh->SetVisibility(true);
+	SetHidden(false);
+	
+	InSpawnPoint = bInSpawnPoint;
+	CurrTimeToDestroy = 0;
+}
+
+void AFlag::HideFlag()
+{
+	Capsule->SetGenerateOverlapEvents(false);
+	Mesh->SetVisibility(false);
+	SetHidden(true);
 }

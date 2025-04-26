@@ -1,13 +1,23 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CTFGameMode.h"
+
+#include "CTFAbilitySystemComponent.h"
+#include "CTFGameplayTags.h"
 #include "CTFPlayerController.h"
+#include "FlagSpawnPoint.h"
+#include "Flag.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 void ACTFGameMode::SpawnPlayer(ACTFPlayerController* Controller)
 {
+	if (APawn* Pawn = Controller->GetPawn())
+	{
+		Pawn->Destroy();
+	}
+	
 	ATeamBase* TeamBase = *TeamBases.Find(Controller->TeamTag);
 	ACharacter* Character = GetWorld()->SpawnActor<ACharacter>(PlayerCharacterClass, TeamBase->GetRandomSpawnPoint());
 
@@ -22,12 +32,24 @@ void ACTFGameMode::SpawnPlayer(ACTFPlayerController* Controller)
 
 void ACTFGameMode::RespawnPlayer(ACTFPlayerController* Controller)
 {
+	RespawningPlayers.Add(Controller);
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Controller]{
-		SpawnPlayer(Controller);
+		if (RespawningPlayers.Contains(Controller))
+		{
+			SpawnPlayer(Controller);
+			RespawningPlayers.Remove(Controller);
+		}
 	});
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, RespawnTime, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, PlayerRespawnTime, false);
+}
+
+void ACTFGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	FlagController = GetWorld()->SpawnActor<AFlagController>(FlagControllerClass);
+	FlagController->StartFlagRespawn();
 }
 
 void ACTFGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -58,6 +80,8 @@ void ACTFGameMode::OnPostLogin(AController* NewPlayer)
 		PlayerController->TeamTag = TeamTag;
 		TeamsPlayerCount[TeamTag]++;
 		SpawnPlayer(PlayerController);
+
+		PlayerController->OnPlayerDied.AddDynamic(this, &ACTFGameMode::HandlePlayerDeath);
 	}
 }
 
@@ -86,4 +110,13 @@ FGameplayTag ACTFGameMode::GetTeamWithLessPlayers()
 	}
 
 	return Team;
+}
+
+void ACTFGameMode::HandlePlayerDeath(ACTFPlayerController* PlayerController)
+{
+	if (PlayerController->GetAbilitySystemComponent()->HasMatchingGameplayTag(FCTFGameplayTags::Get().Player_HasFlag))
+	{
+		FlagController->SpawnFlagAt(PlayerController->GetPawn()->GetActorLocation());
+	}
+	RespawnPlayer(PlayerController);
 }

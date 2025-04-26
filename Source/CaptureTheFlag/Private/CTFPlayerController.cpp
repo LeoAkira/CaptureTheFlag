@@ -35,7 +35,8 @@ void ACTFPlayerController::SetupDelegates()
 
 			if (Data.NewValue <= 0)
 			{
-				RequestRespawn();
+				AbilitySystemComponent = nullptr;
+				OnPlayerDied.Broadcast(this);
 			}
 		}
 	);
@@ -106,10 +107,4 @@ UCTFAbilitySystemComponent* ACTFPlayerController::GetAbilitySystemComponent()
 		AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetCharacter()));
 	}
 	return AbilitySystemComponent;
-}
-
-void ACTFPlayerController::RequestRespawn_Implementation()
-{
-	ACTFGameMode* GameMode = Cast<ACTFGameMode>(GetWorld()->GetAuthGameMode());
-	GameMode->RespawnPlayer(this);
 }

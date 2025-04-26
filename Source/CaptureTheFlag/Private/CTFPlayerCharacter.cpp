@@ -61,12 +61,11 @@ void ACTFPlayerCharacter::OnRep_PlayerState()
 	//Client Init
 	Super::OnRep_PlayerState();
 
-	//OnRep_PlayerState seems to be called also when player state is destroyed
-	if (GetPlayerState())
+	if (GetPlayerState() != nullptr)
 	{
 		InitializeCharacter();
+		InitializeController();
 	}
-	InitializeController();
 }
 
 FVector ACTFPlayerCharacter::GetMuzzleLocation()
@@ -124,6 +123,8 @@ void ACTFPlayerCharacter::CharacterDeath()
 	WeaponComponent->SetSimulatePhysics(true);
 	WeaponComponent->SetEnableGravity(true);
 	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	FlagComponent->SetVisibility(false);
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -185,12 +186,6 @@ void ACTFPlayerCharacter::OnHealthChanged_Implementation(float NewValue)
 		}
 		
 		CharacterDeath();
-
-		//Drop flag
-		if (AbilitySystemComponent->HasMatchingGameplayTag(FCTFGameplayTags::Get().Player_HasFlag))
-		{
-			//Cast<AFlagController>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlagController::StaticClass()))->StartFlagRespawn();
-		}
 	}
 }
 

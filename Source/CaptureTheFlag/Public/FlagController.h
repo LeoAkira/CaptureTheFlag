@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Flag.h"
 #include "TeamBase.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
@@ -16,22 +17,21 @@ class CAPTURETHEFLAG_API AFlagController : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
-	AFlagController();
-
 	UPROPERTY(BlueprintAssignable)
 	FOnFlagDeliveredSignature OnFlagDelivered;
 
 	UFUNCTION(BlueprintCallable)
-	AFlag* SpawnFlag(FVector Location);
+	void StartFlagRespawn();
 
 	UFUNCTION(BlueprintCallable)
-	void StartFlagRespawn();
+	void SpawnFlagAt(FVector Location);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveFlag();
 	
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<ATeamBase*> DeliveryPoints;
 
@@ -41,13 +41,18 @@ protected:
 	UFUNCTION()
 	void FlagDelivered(FGameplayTag TeamTag);
 
-	UPROPERTY()
+	UFUNCTION()
+	AFlag* GetFlag();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Config | Flag")
 	float FlagRespawnTime = 5.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Config | Flag")
 	TSubclassOf<AFlag> FlagClass;
-	
 private:
 	bool RespawnFlag = false;
 	float CurrentFlagRespawnTime = 0.f;
+
+	UPROPERTY()
+	TObjectPtr<AFlag> Flag;
 };
