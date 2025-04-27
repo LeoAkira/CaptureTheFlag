@@ -20,14 +20,16 @@ void ACTFGameMode::SpawnPlayer(ACTFPlayerController* Controller)
 	
 	ATeamBase* TeamBase = *TeamBases.Find(Controller->TeamTag);
 	ACharacter* Character = GetWorld()->SpawnActor<ACharacter>(PlayerCharacterClass, TeamBase->GetRandomSpawnPoint());
+	Character->SetHidden(true);
 
 	//Adding a delay before Possess so character can be properly initialized first
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([Controller, Character]{
 		Controller->Possess(Character);
+		Character->SetHidden(false);
 	});
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.1f, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.5f, false);
 }
 
 void ACTFGameMode::RespawnPlayer(ACTFPlayerController* Controller)
@@ -114,8 +116,11 @@ FGameplayTag ACTFGameMode::GetTeamWithLessPlayers()
 
 void ACTFGameMode::HandlePlayerDeath(ACTFPlayerController* PlayerController)
 {
-	if (PlayerController->GetAbilitySystemComponent()->HasMatchingGameplayTag(FCTFGameplayTags::Get().Player_HasFlag))
+	FGameplayTag HasFlag = FCTFGameplayTags::Get().Player_HasFlag;
+	if (PlayerController->GetAbilitySystemComponent()->HasMatchingGameplayTag(HasFlag))
 	{
+		PlayerController->GetAbilitySystemComponent()->RemoveLooseGameplayTag(HasFlag);
+		PlayerController->GetAbilitySystemComponent()->RemoveReplicatedLooseGameplayTag(HasFlag);
 		FlagController->SpawnFlagAt(PlayerController->GetPawn()->GetActorLocation());
 	}
 	RespawnPlayer(PlayerController);

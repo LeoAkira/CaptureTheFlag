@@ -102,9 +102,6 @@ protected:
 
 	UFUNCTION()
 	void OnGameplayTagCountChanged(FGameplayTag Tag, int32 Count);
-
-	UFUNCTION()
-	void CharacterDeath();
 	
 private:
 	void InitializeCharacter();
@@ -112,6 +109,9 @@ private:
 
 	UPROPERTY()
 	float CameraPitch = 0.f;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void CharacterDeath();
 
 	UFUNCTION(Server, Reliable)
 	void SetCameraPitch(float NewValue);

@@ -38,7 +38,7 @@ void ACTFPlayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
+	
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	WeaponComponent->AttachToComponent(GetMesh(), AttachmentRules, WeaponGripSocketName);
 }
@@ -112,7 +112,7 @@ void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Coun
 	}
 }
 
-void ACTFPlayerCharacter::CharacterDeath()
+void ACTFPlayerCharacter::CharacterDeath_Implementation()
 {
 	//Ragdoll
 	GetMesh()->SetSimulatePhysics(true);
@@ -124,8 +124,6 @@ void ACTFPlayerCharacter::CharacterDeath()
 	WeaponComponent->SetEnableGravity(true);
 	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
-	FlagComponent->SetVisibility(false);
-	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 

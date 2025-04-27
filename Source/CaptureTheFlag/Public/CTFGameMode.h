@@ -42,7 +42,7 @@ protected:
 	TArray<FGameplayTag> TeamTags;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config | Player")
-	float PlayerRespawnTime = 3.f;
+	float PlayerRespawnTime = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config | Flag")
 	TSubclassOf<AFlagController> FlagControllerClass;

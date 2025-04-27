@@ -13,12 +13,9 @@ AProjectile::AProjectile()
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->SetCollisionProfileName(TEXT("Projectile"));
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::Type::PhysicsOnly);
-	CollisionComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	CollisionComp->SetSimulatePhysics(true);
-	CollisionComp->SetNotifyRigidBodyCollision(true);
-	
-	CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);		// set up a notification for when this component hits something blocking
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+	CollisionComp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnHit);
 
 	// Set as root component
 	RootComponent = CollisionComp;
@@ -38,14 +35,14 @@ AProjectile::AProjectile()
 	bReplicates = true;
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnHit(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (HasAuthority() && OtherActor != nullptr && OtherActor != this)
+	if (OtherActor != nullptr && OtherActor != this)
 	{
 		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
 			TargetASC->ApplyGameplayEffectSpecToSelf(*OnHitEffect.Data.Get());
 		}
+		Destroy();
 	}
-	Destroy();
 }

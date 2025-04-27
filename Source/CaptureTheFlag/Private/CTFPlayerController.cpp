@@ -35,7 +35,6 @@ void ACTFPlayerController::SetupDelegates()
 
 			if (Data.NewValue <= 0)
 			{
-				AbilitySystemComponent = nullptr;
 				OnPlayerDied.Broadcast(this);
 			}
 		}
