@@ -2,8 +2,6 @@
 
 
 #include "CTFHUD.h"
-
-#include "CTFAttributeSet.h"
 #include "PlayerDisplay.h"
 
 void ACTFHUD::InitializeHUD(ACTFPlayerController* PlayerController)

@@ -25,14 +25,11 @@ void ACTFPlayerController::BeginPlay()
 void ACTFPlayerController::SetupDelegates()
 {
 	const UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(GetAbilitySystemComponent()->GetAttributeSet(UCTFAttributeSet::StaticClass()));
-	OnHealthChanged.Broadcast(AttributeSet->GetHealth());
 
 	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda
 	(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			OnHealthChanged.Broadcast(Data.NewValue);
-
 			if (Data.NewValue <= 0)
 			{
 				OnPlayerDied.Broadcast(this);

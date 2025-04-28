@@ -124,5 +124,7 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void SetTeamMaterials(FGameplayTag TeamTag);
+
+	bool Died = false;
 };
 

@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/PlayerState.h"
 #include "CTFPlayerState.generated.h"
 
+class UCTFAbilitySystemComponent;
+class UCTFAttributeSet;
 class UAbilitySystemComponent;
 class UAttributeSet;
 
@@ -26,10 +29,11 @@ public:
 	UAttributeSet* GetAttributeSet() const;
 
 protected:
+	virtual void BeginPlay() override;
 	
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	TObjectPtr<UCTFAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
+	TObjectPtr<UCTFAttributeSet> AttributeSet;
 };

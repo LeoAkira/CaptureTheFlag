@@ -2,7 +2,6 @@
 
 
 #include "CTFPlayerState.h"
-
 #include "CTFAbilitySystemComponent.h"
 #include "CTFAttributeSet.h"
 
@@ -23,4 +22,10 @@ UAbilitySystemComponent* ACTFPlayerState::GetAbilitySystemComponent() const
 UAttributeSet* ACTFPlayerState::GetAttributeSet() const
 {
 	return AttributeSet;
+}
+
+void ACTFPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+	
 }

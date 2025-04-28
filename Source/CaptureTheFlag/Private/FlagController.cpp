@@ -34,7 +34,6 @@ AFlag* AFlagController::GetFlag()
 	{
 		Flag = GetWorld()->SpawnActor<AFlag>(FlagClass, FTransform());
 		Flag->HideFlag();
-		Flag->OnFlagAutoDestroyed.AddDynamic(this, &AFlagController::StartFlagRespawn);
 	}
 	return Flag;
 }

@@ -45,7 +45,7 @@ protected:
 	AFlag* GetFlag();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config | Flag")
-	float FlagRespawnTime = 5.f;
+	float FlagRespawnTime = 1.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Config | Flag")
 	TSubclassOf<AFlag> FlagClass;

@@ -23,7 +23,7 @@ public:
 	void InitializeHUD(ACTFPlayerController* PlayerController);
 
 protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UPlayerDisplay> PlayerDisplayClass;
 	
 private:

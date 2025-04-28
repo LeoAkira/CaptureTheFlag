@@ -28,10 +28,14 @@ ACTFPlayerCharacter::ACTFPlayerCharacter()
 	FirstPersonCameraComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	FlagComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flag"));
 	FlagComponent->SetupAttachment(RootComponent);
 	FlagComponent->SetVisibility(false);
+
+	bReplicates = true;
+	ReplicatedComponents.Add(GetMesh());
 }
 
 void ACTFPlayerCharacter::BeginPlay()
@@ -114,6 +118,8 @@ void ACTFPlayerCharacter::OnGameplayTagCountChanged(FGameplayTag Tag, int32 Coun
 
 void ACTFPlayerCharacter::CharacterDeath_Implementation()
 {
+	if (Died) return;
+	Died = true;
 	//Ragdoll
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetEnableGravity(true);
@@ -123,6 +129,8 @@ void ACTFPlayerCharacter::CharacterDeath_Implementation()
 	WeaponComponent->SetSimulatePhysics(true);
 	WeaponComponent->SetEnableGravity(true);
 	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	FlagComponent->SetVisibility(false);
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -140,10 +148,21 @@ void ACTFPlayerCharacter::InitializeCharacter()
 	ACTFPlayerState* CTFPlayerState = GetPlayerState<ACTFPlayerState>();
 	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
-	AttributeSet = CTFPlayerState->GetAttributeSet();
-	Cast<UCTFAttributeSet>(AttributeSet)->SetHealth(MaxHealth);
-	
 	AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
+	AttributeSet = CTFPlayerState->GetAttributeSet();
+	UCTFAttributeSet* CTFAttributeSet = Cast<UCTFAttributeSet>(AttributeSet);
+	CTFAttributeSet->SetHealth(MaxHealth);
+	
+	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(CTFAttributeSet->GetHealthAttribute()).AddLambda
+	(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			if (Data.NewValue <= 0)
+			{
+				CharacterDeath();
+			}
+		}
+	);
 }
 
 void ACTFPlayerCharacter::InitializeController()
@@ -157,8 +176,6 @@ void ACTFPlayerCharacter::InitializeController()
 		AbilitySystemComponent->AddLooseGameplayTag(CTFPlayerController->TeamTag);
 		AbilitySystemComponent->AddReplicatedLooseGameplayTag(CTFPlayerController->TeamTag);
 		SetTeamMaterials(CTFPlayerController->TeamTag);
-
-		CTFPlayerController->OnHealthChanged.AddDynamic(this, &ACTFPlayerCharacter::OnHealthChanged);
 	}
 }
 

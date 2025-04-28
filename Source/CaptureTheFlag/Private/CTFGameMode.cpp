@@ -5,8 +5,6 @@
 #include "CTFAbilitySystemComponent.h"
 #include "CTFGameplayTags.h"
 #include "CTFPlayerController.h"
-#include "FlagSpawnPoint.h"
-#include "Flag.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
@@ -20,20 +18,27 @@ void ACTFGameMode::SpawnPlayer(ACTFPlayerController* Controller)
 	
 	ATeamBase* TeamBase = *TeamBases.Find(Controller->TeamTag);
 	ACharacter* Character = GetWorld()->SpawnActor<ACharacter>(PlayerCharacterClass, TeamBase->GetRandomSpawnPoint());
-	Character->SetHidden(true);
+	Character->SetActorHiddenInGame(true);
 
-	//Adding a delay before Possess so character can be properly initialized first
+	//Adding a delay before Possess so character can be properly initialized before possessing
 	FTimerDelegate TimerDelegate;
+
 	TimerDelegate.BindLambda([Controller, Character]{
 		Controller->Possess(Character);
-		Character->SetHidden(false);
+		Character->SetActorHiddenInGame(false);
 	});
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.5f, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, .5f, false);
 }
 
 void ACTFGameMode::RespawnPlayer(ACTFPlayerController* Controller)
 {
+	//Ignore Respawn after while ending match
+	if (MatchState != MatchState::WaitingToStart && MatchState != MatchState::InProgress) return;
+
+	const float RespawnTime = MatchState == MatchState::InProgress ? PlayerRespawnTime : 0.2f;
+
+	//Avoids double respawning
 	RespawningPlayers.Add(Controller);
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Controller]{
@@ -44,14 +49,23 @@ void ACTFGameMode::RespawnPlayer(ACTFPlayerController* Controller)
 		}
 	});
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, PlayerRespawnTime, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, RespawnTime, false);
+}
+
+void ACTFGameMode::RespawnFlag()
+{
+	FlagController->StartFlagRespawn();
+}
+
+void ACTFGameMode::EndGame()
+{
+	EndMatch();
 }
 
 void ACTFGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	FlagController = GetWorld()->SpawnActor<AFlagController>(FlagControllerClass);
-	FlagController->StartFlagRespawn();
 }
 
 void ACTFGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -78,6 +92,7 @@ void ACTFGameMode::OnPostLogin(AController* NewPlayer)
 
 	if (ACTFPlayerController* PlayerController = Cast<ACTFPlayerController>(NewPlayer))
 	{
+		PlayerController->SetInputMode(FInputModeGameOnly());
 		FGameplayTag TeamTag = GetTeamWithLessPlayers();
 		PlayerController->TeamTag = TeamTag;
 		TeamsPlayerCount[TeamTag]++;
@@ -97,6 +112,47 @@ void ACTFGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 }
 
+void ACTFGameMode::HandleMatchIsWaitingToStart()
+{
+	Super::HandleMatchIsWaitingToStart();
+}
+
+void ACTFGameMode::HandleMatchHasStarted()
+{
+	Super::HandleMatchHasStarted();
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACTFPlayerController::StaticClass(), FoundActors);
+	for (AActor* Actor : FoundActors)
+	{
+		RespawnPlayer(Cast<ACTFPlayerController>(Actor));
+	}
+	RespawnFlag();
+}
+
+void ACTFGameMode::HandleMatchHasEnded()
+{
+	Super::HandleMatchHasEnded();
+	
+}
+
+void ACTFGameMode::HandleMatchAborted()
+{
+	Super::HandleMatchAborted();
+	
+}
+
+bool ACTFGameMode::ReadyToStartMatch_Implementation()
+{
+	if (GetMatchState() == MatchState::WaitingToStart)
+	{
+		if (NumPlayers >= MinPlayersToStart)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 FGameplayTag ACTFGameMode::GetTeamWithLessPlayers()
 {
 	FGameplayTag Team = TeamTags[0];
@@ -110,18 +166,15 @@ FGameplayTag ACTFGameMode::GetTeamWithLessPlayers()
 			Count = TeamCount;
 		}
 	}
-
 	return Team;
 }
 
 void ACTFGameMode::HandlePlayerDeath(ACTFPlayerController* PlayerController)
 {
-	FGameplayTag HasFlag = FCTFGameplayTags::Get().Player_HasFlag;
-	if (PlayerController->GetAbilitySystemComponent()->HasMatchingGameplayTag(HasFlag))
+	if (PlayerController->GetAbilitySystemComponent()->HasMatchingGameplayTag(FCTFGameplayTags::Get().Player_HasFlag))
 	{
-		PlayerController->GetAbilitySystemComponent()->RemoveLooseGameplayTag(HasFlag);
-		PlayerController->GetAbilitySystemComponent()->RemoveReplicatedLooseGameplayTag(HasFlag);
 		FlagController->SpawnFlagAt(PlayerController->GetPawn()->GetActorLocation());
 	}
+	
 	RespawnPlayer(PlayerController);
 }

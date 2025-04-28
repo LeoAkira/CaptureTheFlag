@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Blueprint/UserWidget.h"
 #include "PlayerDisplay.generated.h"
 
@@ -25,6 +26,15 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHealthChanged(float NewHealth);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnScoreUpdated(FGameplayTag Team, int NewScore);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameStarted(const TArray<FGameplayTag>& Teams);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnGameOver(FGameplayTag WinningTeam);
+	
 	UPROPERTY(BlueprintReadOnly)
 	float MaxHealth;
 };

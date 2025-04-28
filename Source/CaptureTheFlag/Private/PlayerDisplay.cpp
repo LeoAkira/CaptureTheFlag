@@ -6,19 +6,32 @@
 #include "CTFAbilitySystemComponent.h"
 #include "CTFPlayerController.h"
 #include "CTFAttributeSet.h"
+#include "CTFGameState.h"
 #include "CTFPlayerState.h"
 
 void UPlayerDisplay::InitializeDisplay_Implementation(ACTFPlayerController* PlayerController)
 {
-	ACTFPlayerState* PlayerState = PlayerController->GetPlayerState<ACTFPlayerState>();
-	UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(PlayerState->GetAttributeSet());
-	UCTFAbilitySystemComponent* AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(PlayerState->GetAbilitySystemComponent());
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
+	if (const ACTFPlayerState* PlayerState = PlayerController->GetPlayerState<ACTFPlayerState>())
+	{
+		if (const UCTFAttributeSet* AttributeSet = Cast<UCTFAttributeSet>(PlayerState->GetAttributeSet()))
 		{
-			OnHealthChanged(Data.NewValue);
+			MaxHealth = AttributeSet->GetHealth();
+			if (UCTFAbilitySystemComponent* AbilitySystemComponent = Cast<UCTFAbilitySystemComponent>(PlayerState->GetAbilitySystemComponent()))
+			{
+				AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+					[this](const FOnAttributeChangeData& Data)
+					{
+						OnHealthChanged(Data.NewValue);
+					}
+				);
+			}
 		}
-	);
-	
-	MaxHealth = AttributeSet->GetHealth();
+	}
+
+	if (ACTFGameState* GameState = Cast<ACTFGameState>(GetWorld()->GetGameState()))
+	{
+		GameState->OnMatchStarted.AddDynamic(this, &UPlayerDisplay::OnGameStarted);
+		GameState->OnScoreUpdated.AddDynamic(this, &UPlayerDisplay::OnScoreUpdated);
+		GameState->OnGameOver.AddDynamic(this, &UPlayerDisplay::OnGameOver);
+	}
 }

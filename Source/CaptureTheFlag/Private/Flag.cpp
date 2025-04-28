@@ -38,15 +38,6 @@ void AFlag::BeginPlay()
 void AFlag::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (!InSpawnPoint)
-	{
-		CurrTimeToDestroy += DeltaTime;
-		if (CurrTimeToDestroy >= TimeToAutoDestroy)
-		{
-			HideFlag();
-			OnFlagAutoDestroyed.Broadcast();
-		}
-	}
 }
 
 void AFlag::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -67,33 +58,27 @@ void AFlag::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherAct
 	}
 }
 
-void AFlag::ShowFlag(FVector Location, bool bInSpawnPoint)
+void AFlag::ShowFlag_Implementation(FVector Location, bool bInSpawnPoint)
 {
 	//Try to reposition the flag on the floor
 	FHitResult Hit;
 	FVector TraceStart = Location + FVector::UpVector * 100;
 	FVector TraceEnd = Location - FVector::UpVector * 300;
-	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldStatic))
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility))
 	{
 		SetActorLocation(Hit.Location);
 	}
 	else
 	{
-		//Flag in weird spot, better respawn at SpawnPoint
-		OnFlagAutoDestroyed.Broadcast();
-		return;
+		SetActorLocation(Location);
 	}
 	
 	Capsule->SetGenerateOverlapEvents(true);
 	SetActorHiddenInGame(false);
-	
-	InSpawnPoint = bInSpawnPoint;
-	CurrTimeToDestroy = 0;
 }
 
-void AFlag::HideFlag()
+void AFlag::HideFlag_Implementation()
 {
 	Capsule->SetGenerateOverlapEvents(false);
 	SetActorHiddenInGame(true);
-	InSpawnPoint = false;
 }
