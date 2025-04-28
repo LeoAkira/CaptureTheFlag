@@ -98,3 +98,8 @@ bool AOnlineSessionController::JoinGame()
 	}
 	return false;
 }
+
+void AOnlineSessionController::EndSession()
+{
+	Online::GetSubsystem(GetWorld())->GetSessionInterface()->EndSession(NAME_GameSession);
+}

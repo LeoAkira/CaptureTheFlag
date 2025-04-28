@@ -5,30 +5,22 @@
 
 #include "AbilitySystemComponent.h"
 #include "CTFGameMode.h"
-#include "TeamBase.h"
 #include "Kismet/GameplayStatics.h"
 
 
 void ACTFGameState::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATeamBase::StaticClass(), FoundActors);
-
-	for (AActor* Actor : FoundActors)
-	{
-		ATeamBase* Base = Cast<ATeamBase>(Actor);
-		Base->OnFlagDelivered.AddDynamic(this, &ACTFGameState::OnTeamScored);
-		TeamPoints.Add(Base->GetTeamTag());
-		TeamBases.Add(Base);
-		OnScoreUpdated.Broadcast(Base->GetTeamTag(), 0);
-	}
+	Initialize();
 }
 
 void ACTFGameState::AddPlayerState(APlayerState* PlayerState)
 {
+	Initialize();
 	Super::AddPlayerState(PlayerState);
+	
+	//Player may have entered after first broadcast
+	if (HasMatchStarted()) OnMatchStarted.Broadcast(TeamTags);
 }
 
 void ACTFGameState::RemovePlayerState(APlayerState* PlayerState)
@@ -41,13 +33,7 @@ void ACTFGameState::OnRep_MatchState()
 	Super::OnRep_MatchState();
 	if (MatchState == MatchState::InProgress)
 	{
-		if (HasAuthority())
-		{
-			if (ACTFGameMode* GameMode = Cast<ACTFGameMode>(AuthorityGameMode))
-			{
-				MulticastOnMatchStarted(GameMode->GetTeamTags());
-			}
-		}
+		OnMatchStarted.Broadcast(TeamTags);
 	}
 }
 
@@ -56,17 +42,35 @@ void ACTFGameState::OnTeamScored(FGameplayTag TeamTag)
 	TeamPoints[TeamTag]++;
 	OnScoreUpdated.Broadcast(TeamTag, TeamPoints[TeamTag]);
 
-	if (HasAuthority())
+	if (ACTFGameMode* GameMode = Cast<ACTFGameMode>(AuthorityGameMode))
 	{
-		ACTFGameMode* GameMode = Cast<ACTFGameMode>(AuthorityGameMode);
 		if (TeamPoints[TeamTag] >= GameMode->GetPointsToWin())
 		{
-			SetMatchState(MatchState::WaitingPostMatch);
 			MulticastOnGameOver(TeamTag);
+			GameMode->EndGame();
 		}
 		else
 		{
 			GameMode->RespawnFlag();
+		}
+	}
+}
+
+void ACTFGameState::Initialize()
+{
+	if (!Initialized)
+	{
+		Initialized = true;
+
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATeamBase::StaticClass(), FoundActors);
+
+		for (AActor* Actor : FoundActors)
+		{
+			ATeamBase* Base = Cast<ATeamBase>(Actor);
+			Base->OnFlagDelivered.AddDynamic(this, &ACTFGameState::OnTeamScored);
+			TeamPoints.Add(Base->GetTeamTag());
+			OnScoreUpdated.Broadcast(Base->GetTeamTag(), 0);
 		}
 	}
 }

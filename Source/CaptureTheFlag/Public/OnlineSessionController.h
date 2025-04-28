@@ -27,4 +27,5 @@ public:
 	
 	bool HostGame() const;
 	bool JoinGame();
+	void EndSession();
 };

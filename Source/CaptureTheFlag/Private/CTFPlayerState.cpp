@@ -27,5 +27,4 @@ UAttributeSet* ACTFPlayerState::GetAttributeSet() const
 void ACTFPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }

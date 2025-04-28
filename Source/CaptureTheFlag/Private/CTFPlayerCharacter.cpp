@@ -65,11 +65,8 @@ void ACTFPlayerCharacter::OnRep_PlayerState()
 	//Client Init
 	Super::OnRep_PlayerState();
 
-	if (GetPlayerState() != nullptr)
-	{
-		InitializeCharacter();
-		InitializeController();
-	}
+	InitializeCharacter();
+	InitializeController();
 }
 
 FVector ACTFPlayerCharacter::GetMuzzleLocation()
@@ -120,6 +117,9 @@ void ACTFPlayerCharacter::CharacterDeath_Implementation()
 {
 	if (Died) return;
 	Died = true;
+
+	FirstPersonCameraComponent->AddLocalOffset(FVector(0.0f, -10.0f, 10.0f));
+	FirstPersonCameraComponent->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 	//Ragdoll
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetEnableGravity(true);
@@ -149,10 +149,11 @@ void ACTFPlayerCharacter::InitializeCharacter()
 	AbilitySystemComponent = CTFPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(CTFPlayerState, this);
 	AbilitySystemComponent->RegisterGenericGameplayTagEvent().AddUObject(this, &ACTFPlayerCharacter::OnGameplayTagCountChanged);
+	
 	AttributeSet = CTFPlayerState->GetAttributeSet();
 	UCTFAttributeSet* CTFAttributeSet = Cast<UCTFAttributeSet>(AttributeSet);
 	CTFAttributeSet->SetHealth(MaxHealth);
-	
+
 	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(CTFAttributeSet->GetHealthAttribute()).AddLambda
 	(
 		[this](const FOnAttributeChangeData& Data)

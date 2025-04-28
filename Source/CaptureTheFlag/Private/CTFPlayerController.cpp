@@ -20,6 +20,7 @@ void ACTFPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+	SetShowMouseCursor(false);
 }
 
 void ACTFPlayerController::SetupDelegates()

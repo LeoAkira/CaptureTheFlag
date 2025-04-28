@@ -22,7 +22,7 @@ void ALobbyGameMode::BeginPlay()
 void ALobbyGameMode::OnPostLogin(AController* NewPlayer)
 {
 	Super::OnPostLogin(NewPlayer);
-	Cast<APlayerController>(NewPlayer)->SetInputMode(FInputModeUIOnly());
+	Cast<APlayerController>(NewPlayer)->SetShowMouseCursor(true);
 }
 
 void ALobbyGameMode::HostGame()

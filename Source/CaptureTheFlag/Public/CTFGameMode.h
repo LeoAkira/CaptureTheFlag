@@ -22,7 +22,7 @@ public:
 	void SpawnPlayer(ACTFPlayerController* Controller);
 
 	UFUNCTION(BlueprintCallable)
-	void RespawnPlayer(ACTFPlayerController* Controller);
+	void RespawnPlayer(ACTFPlayerController* Controller, bool SkipTimer = false);
 
 	UFUNCTION(BlueprintCallable)
 	void RespawnFlag();
@@ -34,17 +34,21 @@ public:
 	void EndGame();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TSubclassOf<ACharacter> GetPlayerCharacterClass() { return PlayerCharacterClass; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<FGameplayTag> GetTeamTags() { return TeamTags; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetPlayerRespawnTime() { return PlayerRespawnTime; }
 	
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void OnPostLogin(AController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
-	virtual void HandleMatchIsWaitingToStart() override;
 	virtual void HandleMatchHasStarted() override;
 	virtual void HandleMatchHasEnded() override;
-	virtual void HandleMatchAborted() override;
 	virtual bool ReadyToStartMatch_Implementation() override;
 	
 	UPROPERTY()
@@ -59,8 +63,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Game")
 	int MinPlayersToStart = 4;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Game")
+	float TimeToStart = 5.f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Game")
+	float TimeToEnd = 5.f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Player")
-	TSubclassOf<ACharacter> PlayerCharacterClass ;
+	TSubclassOf<ACharacter> PlayerCharacterClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Player")
 	TArray<FGameplayTag> TeamTags;
@@ -71,7 +81,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Flag")
 	TSubclassOf<AFlagController> FlagControllerClass;
 private:
-	FGameplayTag GetTeamWithLessPlayers();
 
 	UPROPERTY()
 	TObjectPtr<AFlagController> FlagController;
@@ -81,6 +90,9 @@ private:
 
 	UPROPERTY()
 	TArray<ACTFPlayerController*> RespawningPlayers;
+	FTimerHandle StartMatchTimerHandle;
+
+	FGameplayTag GetTeamWithLessPlayers();
 };
 
 

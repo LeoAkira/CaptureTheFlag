@@ -31,7 +31,7 @@ public:
 
 	UPROPERTY()
 	FOnGameOverSignature OnGameOver;
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void AddPlayerState(APlayerState* PlayerState) override;
@@ -41,10 +41,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TMap<FGameplayTag, int> TeamPoints;
 
-private:
-	UPROPERTY()
-	TArray<ATeamBase*> TeamBases;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config | Player")
+	TArray<FGameplayTag> TeamTags;
 
+private:
 	UFUNCTION()
 	void OnTeamScored(FGameplayTag TeamTag);
 
@@ -53,4 +53,7 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastOnMatchStarted(const TArray<FGameplayTag>& TeamsTags);
+
+	void Initialize();
+	bool Initialized = false;
 };
